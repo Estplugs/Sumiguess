@@ -1,7 +1,7 @@
 local HttpService = game:GetService("HttpService")
 
-local userKey = script_key  -- Get the key from the loader script
-local webhookURL = ""
+local userKey = script_key -- Set by the loader script
+local serverEndpoint = "https://4211-2601-647-6512-1bd7-65e8-985-974a-faa2.ngrok-free.app"
 local realScriptURL = "https://raw.githubusercontent.com/Estplugs/test/refs/heads/main/lua"
 
 local userHWID = "NO_HWID_FUNCTION"
@@ -22,7 +22,8 @@ pcall(function()
     placeName = info.Name or "UnknownPlace"
 end)
 
-local validateUrl = string.format("http://127.0.0.1:5000/validate_key?key=%s&hwid=%s", userKey, userHWID)
+-- Validation URL
+local validateUrl = string.format("%s/validate_key?key=%s&hwid=%s", serverEndpoint, userKey, userHWID)
 
 local success, response = pcall(function()
     return http.request({
@@ -32,7 +33,7 @@ local success, response = pcall(function()
 end)
 
 if not success or not response then
-    game.Players.LocalPlayer:Kick("Whitelist check failed. No response from server.")
+    game.Players.LocalPlayer:Kick("Whitelist check failed: No response from the server.")
     return
 end
 
@@ -45,85 +46,48 @@ local data
 local decodeOK, decodeErr = pcall(function()
     data = HttpService:JSONDecode(response.Body)
 end)
+
 if not decodeOK then
-    game.Players.LocalPlayer:Kick("Whitelist check: invalid JSON => "..(decodeErr or "nil"))
+    game.Players.LocalPlayer:Kick("Whitelist check failed: "..(decodeErr or "Invalid JSON"))
     return
 end
 
 if not data.valid then
-    game.Players.LocalPlayer:Kick("Whitelist check failed => "..(data.reason or "nil"))
+    game.Players.LocalPlayer:Kick("Whitelist check failed: "..(data.reason or "Unauthorized access"))
     return
 end
 
-local discordId = data.discord_id or "Unknown"
-local executionCount = data.execution_count or 0
-
-local embedData = {
-    title = "Whitelist Execution Log",
-    description = "User executed the script.",
-    color = 0x2ECC71,
-    fields = {
-        {
-            name = "HWID",
-            value = userHWID,
-            inline = true
-        },
-        {
-            name = "Executor",
-            value = executorName,
-            inline = true
-        },
-        {
-            name = "Key",
-            value = userKey,
-            inline = false
-        },
-        {
-            name = "Discord ID",
-            value = discordId,
-            inline = false
-        },
-        {
-            name = "Execution Count",
-            value = tostring(executionCount),
-            inline = false
-        },
-        {
-            name = "Job ID",
-            value = jobId,
-            inline = false
-        },
-        {
-            name = "Place ID",
-            value = tostring(placeId),
-            inline = true
-        },
-        {
-            name = "Game Name",
-            value = placeName,
-            inline = true
-        }
-    }
+-- Log Execution
+local logData = {
+    hwid = userHWID,
+    executor = executorName,
+    key = userKey,
+    discord_id = data.discord_id or "Unknown",
+    execution_count = data.execution_count or 0,
+    job_id = jobId,
+    place_id = placeId,
+    place_name = placeName
 }
 
-local webhookBody = {
-    username = "Whitelist Logger",
-    embeds = {embedData}
-}
-
-local encoded = HttpService:JSONEncode(webhookBody)
-pcall(function()
+local logUrl = serverEndpoint .. "/log_execution"
+local logSuccess, logError = pcall(function()
     http.request({
-        Url = webhookURL,
+        Url = logUrl,
         Method = "POST",
         Headers = {["Content-Type"] = "application/json"},
-        Body = encoded
+        Body = HttpService:JSONEncode(logData)
     })
 end)
 
-local success2, err2 = pcall(function()
+if not logSuccess then
+    game.Players.LocalPlayer:Kick("Failed to log execution: "..tostring(logError))
+end
+
+-- Load the real script
+local scriptSuccess, scriptError = pcall(function()
     loadstring(game:HttpGet(realScriptURL))()
 end)
-if not success2 then
-    game.Players.LocalPlayer:Kick("Failed to load main script => "..tostring(err2))
+
+if not scriptSuccess then
+    game.Players.LocalPlayer:Kick("Failed to load main script: "..tostring(scriptError))
 end
