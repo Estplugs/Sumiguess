@@ -1,7 +1,7 @@
 local HttpService = game:GetService("HttpService")
 
-local userKey = script_key  -- Get the key from the loader script
-local webhookURL = "https://discord.com/api/webhooks/1319917348156735488/CvR1Y1fMuTVvoy6b2ihvwBAJGbr2wUtggtWl7OtDiFGCggwmACHrPadRMVWPqhjV6G17"
+local userKey = "YOUR_KEY_HERE"
+local serverEndpoint = "http://127.0.0.1:5000/log_execution"  -- Replace with your server endpoint
 local realScriptURL = "https://raw.githubusercontent.com/Estplugs/test/refs/heads/main/lua"
 
 local userHWID = "NO_HWID_FUNCTION"
@@ -55,72 +55,32 @@ if not data.valid then
     return
 end
 
-local discordId = data.discord_id or "Unknown"
-local executionCount = data.execution_count or 0
-
-local embedData = {
-    title = "Whitelist Execution Log",
-    description = "User executed the script.",
-    color = 0x2ECC71,
-    fields = {
-        {
-            name = "HWID",
-            value = userHWID,
-            inline = true
-        },
-        {
-            name = "Executor",
-            value = executorName,
-            inline = true
-        },
-        {
-            name = "Key",
-            value = userKey,
-            inline = false
-        },
-        {
-            name = "Discord ID",
-            value = discordId,
-            inline = false
-        },
-        {
-            name = "Execution Count",
-            value = tostring(executionCount),
-            inline = false
-        },
-        {
-            name = "Job ID",
-            value = jobId,
-            inline = false
-        },
-        {
-            name = "Place ID",
-            value = tostring(placeId),
-            inline = true
-        },
-        {
-            name = "Game Name",
-            value = placeName,
-            inline = true
-        }
-    }
+-- Log execution to the server
+local logData = {
+    hwid = userHWID,
+    executor = executorName,
+    key = userKey,
+    discord_id = data.discord_id or "Unknown",
+    execution_count = data.execution_count or 0,
+    job_id = jobId,
+    place_id = placeId,
+    place_name = placeName
 }
 
-local webhookBody = {
-    username = "Whitelist Logger",
-    embeds = {embedData}
-}
-
-local encoded = HttpService:JSONEncode(webhookBody)
-pcall(function()
+local logSuccess, logErr = pcall(function()
     http.request({
-        Url = webhookURL,
+        Url = serverEndpoint,
         Method = "POST",
         Headers = {["Content-Type"] = "application/json"},
-        Body = encoded
+        Body = HttpService:JSONEncode(logData)
     })
 end)
 
+if not logSuccess then
+    game.Players.LocalPlayer:Kick("Failed to log execution => "..tostring(logErr))
+end
+
+-- Load the real script
 local success2, err2 = pcall(function()
     loadstring(game:HttpGet(realScriptURL))()
 end)
