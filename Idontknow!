@@ -1,9 +1,14 @@
 local HttpService = game:GetService("HttpService")
 
 local userKey = "YOUR_KEY_HERE"
-local serverEndpoint = "https://85a1-2601-647-6512-1bd7-65e8-985-974a-faa2.ngrok-free.app/log_execution"  -- Replace with your server endpoint
+local validateUrl = "https://85a1-2601-647-6512-1bd7-65e8-985-974a-faa2.ngrok-free.app/validate_key"
+local serverEndpoint = "https://85a1-2601-647-6512-1bd7-65e8-985-974a-faa2.ngrok-free.app/log_execution"
 local realScriptURL = "https://raw.githubusercontent.com/Estplugs/test/refs/heads/main/lua"
 
+-- Remaining script logic stays the same
+
+
+-- Gather User Information
 local userHWID = "NO_HWID_FUNCTION"
 if gethwid then
     userHWID = gethwid()
@@ -22,11 +27,12 @@ pcall(function()
     placeName = info.Name or "UnknownPlace"
 end)
 
-local validateUrl = string.format("http://127.0.0.1:5000/validate_key?key=%s&hwid=%s", userKey, userHWID)
+-- Validate Key
+local validateRequestUrl = string.format("%s?key=%s&hwid=%s", validateUrl, userKey, userHWID)
 
 local success, response = pcall(function()
     return http.request({
-        Url = validateUrl,
+        Url = validateRequestUrl,
         Method = "GET"
     })
 end)
@@ -55,13 +61,13 @@ if not data.valid then
     return
 end
 
--- Log execution to the server
+-- Log Execution to Server
 local logData = {
     hwid = userHWID,
     executor = executorName,
     key = userKey,
-    discord_id = data.discord_id or "Unknown",
-    execution_count = data.execution_count or 0,
+    discord_id = data.discord_id or "Unknown",  -- Server should provide Discord ID
+    execution_count = data.execution_count or 0,  -- Server increments and sends back
     job_id = jobId,
     place_id = placeId,
     place_name = placeName
@@ -78,9 +84,10 @@ end)
 
 if not logSuccess then
     game.Players.LocalPlayer:Kick("Failed to log execution => "..tostring(logErr))
+    return
 end
 
--- Load the real script
+-- Load the Main Script
 local success2, err2 = pcall(function()
     loadstring(game:HttpGet(realScriptURL))()
 end)
