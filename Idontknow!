@@ -22,7 +22,7 @@ pcall(function()
     placeName = info.Name or "UnknownPlace"
 end)
 
-local validateUrl = string.format("https://e265-2601-647-6512-1bd7-65e8-985-974a-faa2.ngrok-free.app/validate_key?key=%s&hwid=%s", userKey, userHWID)
+local validateUrl = string.format("http://127.0.0.1:5000/validate_key?key=%s&hwid=%s", userKey, userHWID)
 
 local success, response = pcall(function()
     return http.request({
