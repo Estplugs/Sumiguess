@@ -1,6 +1,5 @@
 ------------------------------------------------------
--- main.lua (the code delivered to loader)
--- Potentially obfuscated as well
+-- main.lua (delivered to loader)
 ------------------------------------------------------
 
 -- 1) Check if the loader set _G.LoaderVerified
@@ -21,8 +20,11 @@ if success then
     if not data.valid then
         error("Key no longer valid. Reason: " .. tostring(data.reason))
     end
+else
+    error("Failed to contact validation server: " .. tostring(response))
 end
 
 -- 3) If here, the user is legit. Run the real code:
 print("Welcome to the secured main script!")
--- ... Your actual game logic ...
+-- Now load Infinite Yield
+loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
