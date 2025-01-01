@@ -1,59 +1,28 @@
--- Roblox Lua Script for Validation
+------------------------------------------------------
+-- main.lua (the code delivered to loader)
+-- Potentially obfuscated as well
+------------------------------------------------------
 
-local HttpService = game:GetService("HttpService")
-
--- User-provided key
-local userKey = "YOUR_SCRIPT_KEY" -- Replace with the user's provided key
-
--- Validation server endpoint
-local serverEndpoint = "https://e5f7-2601-647-6512-1bd7-65e8-985-974a-faa2.ngrok-free.app/validate_key"
-
--- HWID detection
-local userHWID = "NO_HWID_FUNCTION"
-if gethwid then
-    userHWID = gethwid()
+-- 1) Check if the loader set _G.LoaderVerified
+if not _G.LoaderVerified then
+    error("Please run the loader script!")
 end
 
--- Ensure the user provides a key
-if userKey == "YOUR_SCRIPT_KEY" or userKey == "" then
-    game.Players.LocalPlayer:Kick("Error: No valid key provided. Please enter your script key.")
-    return
-end
+-- 2) (Optional) Double check the key again
+local http = game:GetService("HttpService")
+local validationUrl = "https://YOUR-SERVER.com/validate_key?key=" .. tostring(_G.UserKey)
 
--- Build the validation URL
-local validateUrl = string.format("%s?key=%s&hwid=%s", serverEndpoint, userKey, userHWID)
-
--- Validate the key with the server
 local success, response = pcall(function()
-    return http.request({
-        Url = validateUrl,
-        Method = "GET"
-    })
+    return game:HttpGet(validationUrl)
 end)
 
--- Handle no response or failure from the server
-if not success or not response then
-    game.Players.LocalPlayer:Kick("Whitelist check failed: No response from the server.")
-    return
+if success then
+    local data = http:JSONDecode(response)
+    if not data.valid then
+        error("Key no longer valid. Reason: " .. tostring(data.reason))
+    end
 end
 
--- Handle invalid response codes
-if response.StatusCode ~= 200 then
-    game.Players.LocalPlayer:Kick("Whitelist check failed: " .. (response.Body or "Unknown error"))
-    return
-end
-
--- Decode server response
-local data
-local decodeSuccess, decodeError = pcall(function()
-    data = HttpService:JSONDecode(response.Body)
-end)
-
--- Handle decoding errors or invalid responses
-if not decodeSuccess or not data.valid then
-    game.Players.LocalPlayer:Kick("Whitelist check failed: " .. (data.reason or decodeError))
-    return
-end
-
--- If the script reaches this point, the key is valid
-print("Whitelist check passed: Key is valid.")
+-- 3) If here, the user is legit. Run the real code:
+print("Welcome to the secured main script!")
+-- ... Your actual game logic ...
