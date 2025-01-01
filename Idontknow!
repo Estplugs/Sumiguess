@@ -2,29 +2,41 @@
 -- main.lua (delivered to loader)
 ------------------------------------------------------
 
--- 1) Check if the loader set _G.LoaderVerified
+-- 1) Ensure the loader script actually ran
 if not _G.LoaderVerified then
     error("Please run the loader script!")
 end
+if not _G.UserKey then
+    error("No user key found! Did you set script_key before loading?")
+end
 
--- 2) (Optional) Double check the key again
-local http = game:GetService("HttpService")
-local validationUrl = "https://7112-2601-647-6511-8721-b00d-58ff-435a-9a4a.ngrok-free.app/validate_key?key=" .. tostring(_G.UserKey)
+-- 2) (Optional) Double-check the key again
+local HttpService = game:GetService("HttpService")
+local validationUrl = "https://7112-2601-647-6511-8721-b00d-58ff-435a-9a4a.ngrok-free.app/validate_key?key=" .. _G.UserKey
 
 local success, response = pcall(function()
     return game:HttpGet(validationUrl)
 end)
 
-if success then
-    local data = http:JSONDecode(response)
-    if not data.valid then
-        error("Key no longer valid. Reason: " .. tostring(data.reason))
-    end
-else
-    error("Failed to contact validation server: " .. tostring(response))
+if not success then
+    error("Failed to contact validation server again: " .. tostring(response))
 end
 
--- 3) If here, the user is legit. Run the real code:
+local data
+success, data = pcall(function()
+    return HttpService:JSONDecode(response)
+end)
+
+if not success or type(data) ~= "table" then
+    error("Server returned invalid JSON on second check: " .. tostring(response))
+end
+
+if not data.valid then
+    error("Key is no longer valid. Reason: " .. tostring(data.reason))
+end
+
+-- 3) If the user is legit, run your real code:
 print("Welcome to the secured main script!")
--- Now load Infinite Yield
+
+-- For example, load Infinite Yield:
 loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
