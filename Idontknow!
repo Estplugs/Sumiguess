@@ -10,7 +10,7 @@ end
 
 -- 2) (Optional) Double check the key again
 local http = game:GetService("HttpService")
-local validationUrl = "https://YOUR-SERVER.com/validate_key?key=" .. tostring(_G.UserKey)
+local validationUrl = "https://7112-2601-647-6511-8721-b00d-58ff-435a-9a4a.ngrok-free.app/validate_key?key=" .. tostring(_G.UserKey)
 
 local success, response = pcall(function()
     return game:HttpGet(validationUrl)
