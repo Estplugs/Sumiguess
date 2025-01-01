@@ -1,42 +1,36 @@
 ------------------------------------------------------
--- main.lua (delivered to loader)
+-- main.lua (hosted at YOUR-SERVER.com/main.lua)
 ------------------------------------------------------
 
--- 1) Ensure the loader script actually ran
+-- 1) Ensure the loader script set these variables
 if not _G.LoaderVerified then
-    error("Please run the loader script!")
+    error("Please run the loader script, not me directly!")
 end
-if not _G.UserKey then
-    error("No user key found! Did you set script_key before loading?")
+if not _G.UserKey or not _G.UserHWID then
+    error("Missing key/HWID. Did you run the correct one-line script?")
 end
 
--- 2) (Optional) Double-check the key again
-local HttpService = game:GetService("HttpService")
-local validationUrl = "https://7112-2601-647-6511-8721-b00d-58ff-435a-9a4a.ngrok-free.app/validate_key?key=" .. _G.UserKey
+-- 2) (Optional) Re-check the server if you want a second layer
+-- e.g. 
+--[[
+local http = game:GetService("HttpService")
+local valUrl = "https://8a2f-2601-647-6511-8721-b00d-58ff-435a-9a4a.ngrok-free.app/validate_key?key="
+    .._G.UserKey.."&hwid=".._G.UserHWID
 
 local success, response = pcall(function()
-    return game:HttpGet(validationUrl)
+    return game:HttpGet(valUrl)
 end)
-
 if not success then
-    error("Failed to contact validation server again: " .. tostring(response))
+    error("Cannot contact server again: "..tostring(response))
 end
 
-local data
-success, data = pcall(function()
-    return HttpService:JSONDecode(response)
-end)
-
-if not success or type(data) ~= "table" then
-    error("Server returned invalid JSON on second check: " .. tostring(response))
-end
-
+local data = http:JSONDecode(response)
 if not data.valid then
-    error("Key is no longer valid. Reason: " .. tostring(data.reason))
+    error("Key/HWID invalid on second check. Reason: "..tostring(data.reason))
 end
+]]
 
--- 3) If the user is legit, run your real code:
-print("Welcome to the secured main script!")
+print("Key + HWID are valid. Welcome to the main script!")
 
--- For example, load Infinite Yield:
+-- 3) Put your real code here (e.g., infinite yield, etc.)
 loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
