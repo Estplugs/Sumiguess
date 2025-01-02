@@ -14,7 +14,7 @@ end
 -- e.g. 
 --[[
 local http = game:GetService("HttpService")
-local valUrl = "https://melo.pylex.xyz:9350/validate_key?key="
+local valUrl = "https://melo.pylex.xyz/validate_key?key="
     .._G.UserKey.."&hwid=".._G.UserHWID
 
 local success, response = pcall(function()
