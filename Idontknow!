@@ -7,7 +7,7 @@ end
 
 
 local httpService = game:GetService("HttpService")
-local validationUrl = "http://melo.pylex.xyz:9350/validate_key?key="
+local validationUrl = "https://e6b3-2601-647-6511-c2da-b08a-b672-bdf4-f9d7.ngrok-free.app/validate_key?key="
     .. _G.UserKey .. "&hwid=" .. _G.UserHWID 
 
 local success, response = pcall(function()
