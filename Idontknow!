@@ -14,7 +14,7 @@ end
 -- e.g. 
 --[[
 local http = game:GetService("HttpService")
-local valUrl = "https://da77-2601-647-6511-8721-b00d-58ff-435a-9a4a.ngrok-free.app/validate_key?key="
+local valUrl = "https://melo.pylex.xyz:9350/validate_key?key="
     .._G.UserKey.."&hwid=".._G.UserHWID
 
 local success, response = pcall(function()
